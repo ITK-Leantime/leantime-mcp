@@ -66,10 +66,60 @@ claude mcp add --transport http leantime https://leantime.example.dk/mcp \
 
 ### Claude Desktop
 
-Settings → Connectors → add a custom connector pointing at
-`https://leantime.example.dk/mcp` with the same `x-api-key` header.
+Desktop's `claude_desktop_config.json` accepts **stdio servers only** — its schema is
+`{command, args?, env?}` with no `url` field, so a remote server cannot be entered directly.
+Adding one is silently skipped with "Some MCP servers could not be loaded".
 
-Any other MCP client that supports Streamable HTTP works the same way.
+Bridge to it with [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) instead. Edit
+`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or
+`%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "leantime": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote", "https://leantime.example.dk/mcp",
+        "--header", "x-api-key:your-key"
+      ]
+    }
+  }
+}
+```
+
+Desktop reads this file once at startup, so quit it fully (`Cmd+Q`, not just closing the
+window) and reopen. The key is stored in plaintext here; scope it to the projects and
+operations it actually needs.
+
+Any other MCP client that speaks Streamable HTTP connects like Claude Code, by URL. Clients
+that only support stdio need the `mcp-remote` bridge above.
+
+### Self-signed certificates
+
+A development instance behind a private CA (for example a local Traefik cert) is rejected by
+Node's own trust store even when the certificate is trusted by the OS, failing with
+`DEPTH_ZERO_SELF_SIGNED_CERT`.
+
+Point Node at the CA:
+
+- **Claude Code** — export it in your shell before launching; a `settings.json` `env` block
+  does *not* work, because that applies to spawned subprocesses rather than to Claude Code's
+  own TLS connections:
+
+  ```bash
+  export NODE_EXTRA_CA_CERTS="/path/to/ca.crt"
+  ```
+
+- **Claude Desktop** — add it to the bridge's `env`, which does apply since `mcp-remote` is a
+  spawned subprocess. Desktop is launched from the GUI and never reads your shell profile, so
+  the shell export above has no effect on it:
+
+  ```json
+  "env": { "NODE_EXTRA_CA_CERTS": "/path/to/ca.crt" }
+  ```
+
+Neither is needed against a deployment with a publicly trusted certificate.
 
 ## Tools
 
@@ -78,7 +128,7 @@ scoped to the calling key's granted projects, and there is no delete tool and no
 "call any service" tool — those are unreachable by construction, not by a warning.
 
 | Tool | Grant | Description |
-|---|---|---|
+| --- | --- | --- |
 | `ping` | read | Connectivity check; touches no data |
 | `whoami` | read | Reports the calling key's operations and projects |
 | `list_projects` | read | Projects this key can access |
