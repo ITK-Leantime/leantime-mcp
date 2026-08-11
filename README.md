@@ -73,10 +73,39 @@ Any other MCP client that supports Streamable HTTP works the same way.
 
 ## Tools
 
+Read tools are marked `readOnlyHint` so clients can treat writes with more care. Every tool is
+scoped to the calling key's granted projects, and there is no delete tool and no generic
+"call any service" tool — those are unreachable by construction, not by a warning.
+
 | Tool | Grant | Description |
 |---|---|---|
 | `ping` | read | Connectivity check; touches no data |
 | `whoami` | read | Reports the calling key's operations and projects |
+| `list_projects` | read | Projects this key can access |
+| `get_project_progress` | read | Percent complete and completion dates |
+| `list_statuses` | read | A project's status labels and their types |
+| `list_milestones` | read | Milestones with status and due date |
+| `list_todos` | read | A person's todos, filterable by status and due date |
+| `get_todo` | read | One todo in full |
+| `list_comments` | read | A todo's discussion |
+| `list_attachments` | read | Attachment metadata (never file contents) |
+| `list_time_entries` | read | Logged time for a todo or project |
+| `create_todo` | write | Create a todo and assign it |
+| `update_todo` | write | Change selected fields; omitted fields are left alone |
+| `set_todo_status` | write | Move a todo to NEW, INPROGRESS or DONE |
+| `log_time` | write | Log hours against a todo |
+| `add_comment` | write | Comment on a todo |
+
+Status is exchanged as `NEW`/`INPROGRESS`/`DONE` rather than a number, because status ids are
+configured per project and can be renamed or translated. Use `list_statuses` to show a person
+the project's own wording.
+
+Write tools read the todo back after writing, so the status they report is what was actually
+stored rather than what was requested.
+
+> **No notifications are sent.** Writes go through Databridge, which updates Leantime directly
+> rather than through core's services. Team members get no email when an agent creates a todo,
+> changes a status, logs time, or comments.
 
 ## Development
 
