@@ -1,0 +1,8 @@
+vendor/
+node_modules/
+
+# Never commit API keys or auth config. The Databridge auth file belongs in
+# <leantime>/config/databridge_auth.yaml, never in a plugin folder.
+*auth*.yaml
+!*auth*.sample.yaml
+.env
