@@ -87,10 +87,10 @@ Tools must resolve services **lazily** (inside the handler, via `app()->make()` 
 constructor injection at request time). Plugins load in database order with no dependency
 graph, so touching another plugin's classes during registration is not safe.
 
-Run the grant self-check:
+Run the grant self-check (exits non-zero on failure, so it works in CI):
 
 ```bash
-php -d zend.assertions=1 app/Plugins/LeantimeMcp/tests/grants_test.php
+php app/Plugins/LeantimeMcp/tests/grants_test.php
 ```
 
 Probe the endpoint directly:
