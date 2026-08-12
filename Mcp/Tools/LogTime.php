@@ -14,6 +14,11 @@ class LogTime
     /**
      * Logs hours worked on a todo for a given person and date.
      *
+     * Safe to retry: only one entry can exist per person, todo, date and kind, so repeating a
+     * call whose result you never saw cannot book the same work twice — it reports that the
+     * entry already exists instead. To log more time for the same day, read the entry with
+     * list_time_entries and add to its hours rather than logging a second one.
+     *
      * @param  int  $todoId  Todo the work belongs to.
      * @param  float  $hours  Hours worked.
      * @param  string  $workDate  Date the work happened, as YYYY-MM-DD.

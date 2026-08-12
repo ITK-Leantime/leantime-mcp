@@ -153,6 +153,12 @@ the project's own wording.
 Write tools read the todo back after writing, so the status they report is what was actually
 stored rather than what was requested.
 
+`log_time` is safe to retry. Only one entry can exist per person, todo, date and kind, so a
+call whose result never came back — a timeout, say — can be repeated without double-booking the
+hours; it reports that the entry already exists instead. The other write tools are not
+idempotent: `create_todo` and `add_comment` will produce a second row if retried, so read back
+with `list_todos` or `list_comments` before repeating one.
+
 > **No notifications are sent.** Writes go through Databridge, which updates Leantime directly
 > rather than through core's services. Team members get no email when an agent creates a todo,
 > changes a status, logs time, or comments.

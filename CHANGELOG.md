@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   works in any project regardless of how its statuses are named.
 - Write tools require the key's `write` grant and read the record back after writing, so the
   result reflects what was stored rather than what was requested.
+- `log_time` states that it is safe to retry, since only one entry can exist per person, todo,
+  date and kind — a call whose result was never seen can be repeated without double-booking.
 
 ### Fixed
 
