@@ -1,11 +1,17 @@
 # Leantime MCP Plugin
 
 Serves a [Model Context Protocol](https://modelcontextprotocol.io) server from Leantime at
-`/mcp`, so AI agents can read and write Leantime data through a small, explicit set of
+`/mcp/itk`, so AI agents can read and write Leantime data through a small, explicit set of
 tools.
 
 Clients connect to a URL — there is no local process to install and no API key copied onto
 each machine.
+
+> **Why `/mcp/itk`?** Since Leantime 3.9.7, core reserves `/mcp` for Leantime's own commercial
+> `McpServer` plugin — both servers registering `POST /mcp` would let route order decide which
+> one answers. It has to be a path *under* `/mcp/` rather than a sibling like `/mcp-itk`,
+> because core's `RequestRateLimiter` only recognises `/mcp`, `/mcp/*` and `/mcp?*` as MCP
+> traffic; a sibling path bypasses the rate limiter entirely and gets no budget at all.
 
 ## Why not the built-in API?
 
@@ -13,15 +19,17 @@ Leantime's JSON-RPC API is reflective: `leantime.rpc.{Domain}.{Service}.{method}
 any public method of any domain service, so one key can read every user record and delete
 tickets. The `abilities` column on access tokens is stored but never enforced.
 
-This plugin exposes only the tools registered in `mcp.php`, authenticated by
+This plugin exposes only the tools listed on `Mcp\LeantimeMcpServer`, authenticated by
 [Databridge](https://github.com/ITK-Leantime/leantime_databridge) API keys whose grants are
 enforced server-side. There is deliberately no generic "call any service" tool.
 
 ## Requirements
 
+- **Leantime 3.9.7 or newer**, which ships the `laravel/mcp` package this plugin builds on.
+  (Earlier versions shipped `php-mcp/laravel`; plugin versions up to 0.1.x targeted that and
+  do not work on 3.9.7+.)
 - The **Databridge** plugin, installed and enabled — it provides API keys and the grant
   model this plugin authenticates against.
-- Redis or another cache store (MCP sessions default to the cache driver).
 
 ## Installation
 
@@ -37,7 +45,7 @@ enforced server-side. There is deliberately no generic "call any service" tool.
 
 ## Authentication
 
-`/mcp` is exempt from Leantime's session auth and is instead protected by Databridge's
+`/mcp/itk` is exempt from Leantime's session auth and is instead protected by Databridge's
 `ApiKeyAuth` middleware — **that middleware is the only thing standing in front of the
 endpoint.** The key is passed in the `x-api-key` header.
 
@@ -60,7 +68,7 @@ a project it was not granted, regardless of the arguments it passes.
 ### Claude Code
 
 ```bash
-claude mcp add --transport http leantime https://leantime.example.dk/mcp \
+claude mcp add --transport http leantime https://leantime.example.dk/mcp/itk \
   --header "x-api-key: <your-key>"
 ```
 
@@ -80,7 +88,7 @@ Bridge to it with [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) inste
     "leantime": {
       "command": "npx",
       "args": [
-        "-y", "mcp-remote", "https://leantime.example.dk/mcp",
+        "-y", "mcp-remote", "https://leantime.example.dk/mcp/itk",
         "--header", "x-api-key:your-key"
       ]
     }
@@ -165,8 +173,46 @@ with `list_todos` or `list_comments` before repeating one.
 
 ## Development
 
-Register tools in `mcp.php`; each is a class with an `__invoke()` method whose docblock
-supplies the description and input schema.
+Layout:
+
+- `Mcp/LeantimeMcpServer.php` — the server: the tool list (`$tools`), its name, and the route
+  path (`ROUTE`). Add a tool by adding its class here.
+- `routes.php` — mounts the server with `Mcp::web()` and applies Databridge's `ApiKeyAuth`.
+- `register.php` — exempts the route from core's `AuthCheck` so that middleware is the
+  authenticator.
+- `Mcp/Tools/*.php` — one class per tool, extending `LeantimeTool`.
+
+A tool declares its own name, description and input schema:
+
+```php
+#[IsReadOnly]
+class ListStatuses extends LeantimeTool
+{
+    public function name(): string { return 'list_statuses'; }
+
+    public function description(): string { return 'Lists the statuses…'; }
+
+    public function schema(ToolInputSchema $schema): ToolInputSchema
+    {
+        return $schema->integer('projectId')->description('Project…')->required();
+    }
+
+    protected function run(array $arguments): array
+    {
+        $projectId = (int) $this->requireArg($arguments, 'projectId');
+        // …
+    }
+}
+```
+
+Implement `run()`, not `handle()`. `LeantimeTool::handle()` wraps it so a thrown exception
+becomes a readable tool error instead of an HTTP 500 — `laravel/mcp` only catches
+`ValidationException` and `ItemNotFoundException` itself, and our grant denials are plain
+`RuntimeException`s. Use `requireArg()` for required arguments: the advertised schema marks
+them required but v0.1.1 does not enforce that server-side.
+
+`ToolInputSchema` in v0.1.1 has no array builder — declare list-valued arguments with
+`->raw('tags', ['type' => 'array', 'items' => [...]])`.
 
 Tools must resolve services **lazily** (inside the handler, via `app()->make()` or
 constructor injection at request time). Plugins load in database order with no dependency
@@ -181,12 +227,16 @@ php app/Plugins/LeantimeMcp/tests/grants_test.php
 Probe the endpoint directly:
 
 ```bash
-curl -s -X POST https://leantime.example.dk/mcp \
+curl -s -X POST https://leantime.example.dk/mcp/itk \
   -H "x-api-key: <your-key>" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"probe","version":"1"}},"id":1}'
+  -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"probe","version":"1"}},"id":1}'
 ```
 
-The response carries an `mcp-session-id` header; pass it back as `Mcp-Session-Id` on
-subsequent `tools/list` and `tools/call` requests.
+`tools/list` and `tools/call` can then be sent the same way — each request carries the API key
+and stands alone, so no session handshake is needed first.
+
+The server raises `laravel/mcp`'s default page size from 15 to 50, so all 16 tools arrive on
+one page of `tools/list` — following the pagination cursor is optional for clients, and one
+that ignored it would otherwise never see the 16th tool.

@@ -2,23 +2,44 @@
 
 namespace Leantime\Plugins\LeantimeMcp\Mcp\Tools;
 
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
+use Laravel\Mcp\Server\Tools\ToolInputSchema;
 use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 
 /**
  * Lists a todo's comments.
  */
-class ListComments
+#[IsReadOnly]
+class ListComments extends LeantimeTool
 {
     public function __construct(private readonly DatabridgeGateway $gateway) {}
 
-    /**
-     * Lists the comments on a todo, oldest first, so you can follow the discussion.
-     *
-     * @param  int  $todoId  Todo whose comments to read.
-     * @return list<mixed> Comments with author and date.
-     */
-    public function __invoke(int $todoId): array
+    public function name(): string
     {
+        return 'list_comments';
+    }
+
+    public function description(): string
+    {
+        return 'Lists the comments on a todo, oldest first, so you can follow the discussion.';
+    }
+
+    public function schema(ToolInputSchema $schema): ToolInputSchema
+    {
+        return $schema
+            ->integer('todoId')
+            ->description('Todo whose comments to read.')
+            ->required();
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return list<mixed>
+     */
+    protected function run(array $arguments): array
+    {
+        $todoId = (int) $this->requireArg($arguments, 'todoId');
+
         return $this->gateway->results(
             fn ($controller, $apiUser) => $controller->ticketComments($todoId, $apiUser)
         );

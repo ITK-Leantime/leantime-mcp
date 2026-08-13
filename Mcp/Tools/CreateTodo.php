@@ -2,50 +2,74 @@
 
 namespace Leantime\Plugins\LeantimeMcp\Mcp\Tools;
 
+use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
+use Laravel\Mcp\Server\Tools\ToolInputSchema;
 use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 
 /**
  * Creates a todo.
  */
-class CreateTodo
+#[IsDestructive(false)]
+class CreateTodo extends LeantimeTool
 {
     public function __construct(private readonly DatabridgeGateway $gateway) {}
 
+    public function name(): string
+    {
+        return 'create_todo';
+    }
+
+    public function description(): string
+    {
+        return 'Creates a todo in a project and assigns it to someone. Returns the created todo, '
+            .'including the id needed to update it later.';
+    }
+
+    public function schema(ToolInputSchema $schema): ToolInputSchema
+    {
+        return $schema
+            ->integer('projectId')
+            ->description('Project to create the todo in.')
+            ->required()
+            ->string('name')
+            ->description('Short title for the todo (max 255 characters).')
+            ->required()
+            ->string('username')
+            ->description('Email address of the person to assign it to.')
+            ->required()
+            ->string('description')
+            ->description('Longer description of the work.')
+            ->string('dueDate')
+            ->description('Due date as YYYY-MM-DD.')
+            ->number('plannedHours')
+            ->description('Estimated hours.')
+            ->integer('milestoneId')
+            ->description('Milestone to attach it to; must be in the same project.')
+            // v0.1.1 has no array builder, so declare the list shape directly.
+            ->raw('tags', [
+                'type' => 'array',
+                'items' => ['type' => 'string'],
+                'description' => 'Tags to set on the todo.',
+            ]);
+    }
+
     /**
-     * Creates a todo in a project and assigns it to someone. Returns the created todo,
-     * including the id needed to update it later.
-     *
-     * @param  int  $projectId  Project to create the todo in.
-     * @param  string  $name  Short title for the todo (max 255 characters).
-     * @param  string  $username  Email address of the person to assign it to.
-     * @param  ?string  $description  Longer description of the work.
-     * @param  ?string  $dueDate  Due date as YYYY-MM-DD.
-     * @param  ?float  $plannedHours  Estimated hours.
-     * @param  ?int  $milestoneId  Milestone to attach it to; must be in the same project.
-     * @param  ?array  $tags  Tags to set on the todo.
-     * @return array<string, mixed> The created todo.
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
      */
-    public function __invoke(
-        int $projectId,
-        string $name,
-        string $username,
-        ?string $description = null,
-        ?string $dueDate = null,
-        ?float $plannedHours = null,
-        ?int $milestoneId = null,
-        ?array $tags = null,
-    ): array {
+    protected function run(array $arguments): array
+    {
         $this->gateway->assertCanWrite();
 
         $input = array_filter([
-            'projectId' => $projectId,
-            'name' => $name,
-            'username' => $username,
-            'description' => $description,
-            'dueDate' => $dueDate,
-            'plannedHours' => $plannedHours,
-            'milestoneId' => $milestoneId,
-            'tags' => $tags,
+            'projectId' => (int) $this->requireArg($arguments, 'projectId'),
+            'name' => $this->requireArg($arguments, 'name'),
+            'username' => $this->requireArg($arguments, 'username'),
+            'description' => $arguments['description'] ?? null,
+            'dueDate' => $arguments['dueDate'] ?? null,
+            'plannedHours' => isset($arguments['plannedHours']) ? (float) $arguments['plannedHours'] : null,
+            'milestoneId' => isset($arguments['milestoneId']) ? (int) $arguments['milestoneId'] : null,
+            'tags' => $arguments['tags'] ?? null,
         ], fn ($value) => $value !== null);
 
         return $this->gateway->single(
