@@ -1,16 +1,17 @@
 # Leantime MCP Plugin
 
 Serves a [Model Context Protocol](https://modelcontextprotocol.io) server from Leantime at
-`/mcp-itk`, so AI agents can read and write Leantime data through a small, explicit set of
+`/mcp/itk`, so AI agents can read and write Leantime data through a small, explicit set of
 tools.
 
 Clients connect to a URL — there is no local process to install and no API key copied onto
 each machine.
 
-> **Why `/mcp-itk` and not `/mcp`?** Since Leantime 3.9.7, core reserves `/mcp` for
-> Leantime's own commercial `McpServer` plugin. Both servers registering `POST /mcp` would
-> let route order decide which one answers, so this plugin mounts on its own path and the two
-> can run side by side.
+> **Why `/mcp/itk`?** Since Leantime 3.9.7, core reserves `/mcp` for Leantime's own commercial
+> `McpServer` plugin — both servers registering `POST /mcp` would let route order decide which
+> one answers. It has to be a path *under* `/mcp/` rather than a sibling like `/mcp-itk`,
+> because core's `RequestRateLimiter` only recognises `/mcp`, `/mcp/*` and `/mcp?*` as MCP
+> traffic; a sibling path bypasses the rate limiter entirely and gets no budget at all.
 
 ## Why not the built-in API?
 
@@ -44,7 +45,7 @@ enforced server-side. There is deliberately no generic "call any service" tool.
 
 ## Authentication
 
-`/mcp-itk` is exempt from Leantime's session auth and is instead protected by Databridge's
+`/mcp/itk` is exempt from Leantime's session auth and is instead protected by Databridge's
 `ApiKeyAuth` middleware — **that middleware is the only thing standing in front of the
 endpoint.** The key is passed in the `x-api-key` header.
 
@@ -67,7 +68,7 @@ a project it was not granted, regardless of the arguments it passes.
 ### Claude Code
 
 ```bash
-claude mcp add --transport http leantime https://leantime.example.dk/mcp-itk \
+claude mcp add --transport http leantime https://leantime.example.dk/mcp/itk \
   --header "x-api-key: <your-key>"
 ```
 
@@ -87,7 +88,7 @@ Bridge to it with [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) inste
     "leantime": {
       "command": "npx",
       "args": [
-        "-y", "mcp-remote", "https://leantime.example.dk/mcp-itk",
+        "-y", "mcp-remote", "https://leantime.example.dk/mcp/itk",
         "--header", "x-api-key:your-key"
       ]
     }
@@ -226,7 +227,7 @@ php app/Plugins/LeantimeMcp/tests/grants_test.php
 Probe the endpoint directly:
 
 ```bash
-curl -s -X POST https://leantime.example.dk/mcp-itk \
+curl -s -X POST https://leantime.example.dk/mcp/itk \
   -H "x-api-key: <your-key>" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
@@ -236,6 +237,6 @@ curl -s -X POST https://leantime.example.dk/mcp-itk \
 `tools/list` and `tools/call` can then be sent the same way — each request carries the API key
 and stands alone, so no session handshake is needed first.
 
-Note `tools/list` returns **15 tools per page**. There are 16, so the first page comes back
-with a `nextCursor`; pass it as `params.cursor` to fetch the rest. MCP clients page through
-this automatically.
+The server raises `laravel/mcp`'s default page size from 15 to 50, so all 16 tools arrive on
+one page of `tools/list` — following the pagination cursor is optional for clients, and one
+that ignored it would otherwise never see the 16th tool.

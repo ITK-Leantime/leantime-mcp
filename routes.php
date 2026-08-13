@@ -8,9 +8,10 @@ use Leantime\Plugins\LeantimeMcp\Mcp\LeantimeMcpServer;
  *
  * Loaded by Core\Routing\RouteLoader, which requires routes.php from every enabled plugin.
  *
- * Path is /mcp-itk, NOT /mcp: since 3.9.7 core reserves /mcp for Leantime's own commercial
+ * Path is /mcp/itk, NOT /mcp: since 3.9.7 core reserves /mcp for Leantime's own commercial
  * McpServer plugin (see IncomingRequest::$apiEndpoints and isMcpRequest()). Both registering
- * POST /mcp would let route order decide which server answers.
+ * POST /mcp would let route order decide which server answers. It stays under /mcp/ so core
+ * still classifies it as MCP traffic and rate limits it — see the ROUTE constant.
  *
  * Leantime's 'web'/'api' middleware groups are empty — core middleware (including AuthCheck)
  * runs globally instead, and this route is exempted from it in register.php. So this

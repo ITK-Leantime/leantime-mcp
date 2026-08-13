@@ -23,7 +23,7 @@ class ListTimeEntries extends LeantimeTool
     public function description(): string
     {
         return 'Lists time logged against a todo or across a project, with hours and work dates. '
-            .'Pass either todoId or projectId.';
+            .'Pass exactly one of todoId or projectId.';
     }
 
     public function schema(ToolInputSchema $schema): ToolInputSchema
@@ -44,8 +44,10 @@ class ListTimeEntries extends LeantimeTool
         $todoId = $arguments['todoId'] ?? null;
         $projectId = $arguments['projectId'] ?? null;
 
-        if ($todoId === null && $projectId === null) {
-            throw new RuntimeException('Pass either todoId or projectId to list time entries.');
+        // Databridge requires exactly one of the two, so reject both-given here as well as
+        // neither-given rather than letting the endpoint refuse it a layer later.
+        if (($todoId === null) === ($projectId === null)) {
+            throw new RuntimeException('Pass exactly one of todoId or projectId to list time entries.');
         }
 
         $input = array_filter([

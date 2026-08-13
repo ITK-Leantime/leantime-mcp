@@ -8,8 +8,8 @@ namespace Leantime\Plugins\LeantimeMcp\Services;
  * Leantime resolves Plugins\{Folder}\Services\{Folder} when installing or removing a
  * plugin (see Plugins::getPluginClassName), so this class must exist for the plugin to be
  * installable even though the MCP server needs no install-time setup: it creates no tables
- * and stores no state — tool definitions live in mcp.php and API users in Databridge's
- * auth file.
+ * and stores no state — the tool list lives on Mcp\LeantimeMcpServer and API users in
+ * Databridge's auth file.
  */
 class LeantimeMcp
 {

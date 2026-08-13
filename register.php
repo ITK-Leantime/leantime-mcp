@@ -18,8 +18,11 @@ use Leantime\Plugins\LeantimeMcp\Mcp\LeantimeMcpServer;
 /*
  * Exempt our MCP route from core AuthCheck: clients authenticate with a Databridge API key on
  * the request itself, not a Leantime session, so without this they would be redirected to the
- * login page. Core matches public routes on the first two dot-separated route segments, and
- * our path is a single segment, so the constant matches it exactly.
+ * login page.
+ *
+ * Core turns the path into a dot-separated route ('mcp/itk' -> 'mcp.itk') and compares the
+ * first two segments, so the exemption is the route with slashes swapped for dots. Derived from
+ * the constant rather than written out, so changing the path cannot leave this behind.
  *
  * This makes the route public as far as core is concerned — authentication is enforced by the
  * ApiKeyAuth middleware in routes.php. Fail-closed: when this plugin is disabled neither file
@@ -28,10 +31,17 @@ use Leantime\Plugins\LeantimeMcp\Mcp\LeantimeMcpServer;
 EventDispatcher::add_filter_listener(
     'leantime.core.middleware.authcheck.__construct.publicActions',
     function (array $publicActions): array {
-        if (! in_array(LeantimeMcpServer::ROUTE, $publicActions, true)) {
-            $publicActions[] = LeantimeMcpServer::ROUTE;
+        $route = str_replace('/', '.', LeantimeMcpServer::ROUTE);
+
+        if (! in_array($route, $publicActions, true)) {
+            $publicActions[] = $route;
         }
 
         return $publicActions;
     }
 );
+
+/*
+ * No rate-limit wiring is needed: because ROUTE sits under /mcp/, core's isMcpRequest() already
+ * matches it, so RequestRateLimiter applies the MCP budget (LEAN_RATELIMIT_MCP) on its own.
+ */

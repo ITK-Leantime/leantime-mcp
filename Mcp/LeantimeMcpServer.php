@@ -40,8 +40,14 @@ class LeantimeMcpServer extends Server
      * Single source of truth: routes.php mounts it here and register.php exempts the same
      * value from core's AuthCheck. The two must not drift, or the endpoint either 302s to the
      * login page or is left unauthenticated.
+     *
+     * Must stay UNDER /mcp/. Core's IncomingRequest::isMcpRequest() matches '/mcp', '/mcp/*'
+     * and '/mcp?*', and RequestRateLimiter returns early for anything it and
+     * isApiOrCronRequest() both reject — so a sibling path like '/mcp-itk' is not rate limited
+     * at all, while '/mcp/itk' gets the limiter and its higher MCP budget. It is still a
+     * distinct route from core's own server, which is mounted on exactly '/mcp'.
      */
-    public const ROUTE = 'mcp-itk';
+    public const ROUTE = 'mcp/itk';
 
     /**
      * Reported to clients in initialize's serverInfo.
@@ -52,6 +58,41 @@ class LeantimeMcpServer extends Server
     public string $serverName = 'Leantime MCP (ITK)';
 
     public string $serverVersion = '0.2.0';
+
+    /**
+     * Advertise only what this server actually implements.
+     *
+     * The vendor default announces resources and prompts too; we register neither, so clients
+     * would offer empty resource and prompt pickers. The old php-mcp config switched them off
+     * explicitly and this keeps that behaviour.
+     */
+    public array $capabilities = [
+        'tools' => [
+            'listChanged' => false,
+        ],
+    ];
+
+    /**
+     * Return every tool on the first page of tools/list.
+     *
+     * The vendor default is 15, which would split our 16 tools across two pages. Following the
+     * cursor is optional for clients, so on one that ignores it the last tool would simply not
+     * exist. Keep this comfortably above the tool count.
+     */
+    public int $defaultPaginationLength = 50;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        /*
+         * Swap in a tools/call handler that tolerates a missing 'arguments' key.
+         *
+         * Done via addMethod rather than by redeclaring $methods, which would replace the
+         * parent's whole map and drop initialize, tools/list and the rest.
+         */
+        $this->addMethod('tools/call', CallToolWithOptionalArguments::class);
+    }
 
     /**
      * Shown to clients on initialize, so keep it describing what these tools reach.

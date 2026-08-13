@@ -12,6 +12,16 @@ use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 #[IsReadOnly]
 class ListTodos extends LeantimeTool
 {
+    /**
+     * Ceiling on rows per call.
+     *
+     * Databridge applies the limit verbatim, and the query builder drops the LIMIT clause
+     * entirely for a negative value — so an agent passing -1 to mean "no limit" would pull
+     * every assigned todo into one tool response. Clamped rather than rejected: the agent gets
+     * usable data and can page with sinceId.
+     */
+    private const MAX_LIMIT = 200;
+
     public function __construct(private readonly DatabridgeGateway $gateway) {}
 
     public function name(): string
@@ -38,7 +48,7 @@ class ListTodos extends LeantimeTool
             ->string('dueTo')
             ->description('Only todos due on or before this date (YYYY-MM-DD).')
             ->integer('limit')
-            ->description('Maximum todos to return (default 50).')
+            ->description('Maximum todos to return, 1-'.self::MAX_LIMIT.' (default 50).')
             ->integer('sinceId')
             ->description('Return todos with an id at or above this, for paging.');
     }
@@ -54,8 +64,9 @@ class ListTodos extends LeantimeTool
             'status' => $arguments['status'] ?? null,
             'dateFrom' => $arguments['dueFrom'] ?? null,
             'dateTo' => $arguments['dueTo'] ?? null,
-            'limit' => (string) (int) ($arguments['limit'] ?? 50),
-            'sinceId' => (string) (int) ($arguments['sinceId'] ?? 0),
+            'limit' => (string) max(1, min((int) ($arguments['limit'] ?? 50), self::MAX_LIMIT)),
+            // A negative id would widen the result set rather than narrow it.
+            'sinceId' => (string) max(0, (int) ($arguments['sinceId'] ?? 0)),
         ], fn ($value) => $value !== null);
 
         return $this->gateway->results(
