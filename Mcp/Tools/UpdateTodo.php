@@ -2,54 +2,77 @@
 
 namespace Leantime\Plugins\LeantimeMcp\Mcp\Tools;
 
+use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
+use Laravel\Mcp\Server\Tools\ToolInputSchema;
 use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 use RuntimeException;
 
 /**
  * Updates a todo's fields.
  */
-class UpdateTodo
+#[IsDestructive(false)]
+class UpdateTodo extends LeantimeTool
 {
     public function __construct(private readonly DatabridgeGateway $gateway) {}
 
+    public function name(): string
+    {
+        return 'update_todo';
+    }
+
+    public function description(): string
+    {
+        return 'Updates a todo. Only the fields you pass are changed — omitted fields keep their '
+            .'current values, so there is no need to read the todo first. To change progress, use '
+            .'set_todo_status instead.';
+    }
+
+    public function schema(ToolInputSchema $schema): ToolInputSchema
+    {
+        return $schema
+            ->integer('todoId')
+            ->description('Todo to update.')
+            ->required()
+            ->string('name')
+            ->description('New title (max 255 characters).')
+            ->string('description')
+            ->description('New description.')
+            ->string('dueDate')
+            ->description('New due date as YYYY-MM-DD.')
+            ->number('plannedHours')
+            ->description('New estimate in hours.')
+            ->number('remainingHours')
+            ->description('Hours still remaining.')
+            ->integer('milestoneId')
+            ->description('Milestone to attach it to; must be in the same project.')
+            ->raw('tags', [
+                'type' => 'array',
+                'items' => ['type' => 'string'],
+                'description' => 'Replaces the whole tag list.',
+            ])
+            ->string('assignee')
+            ->description('Email address of the new assignee.');
+    }
+
     /**
-     * Updates a todo. Only the fields you pass are changed — omitted fields keep their
-     * current values, so there is no need to read the todo first. To change progress, use
-     * set_todo_status instead.
-     *
-     * @param  int  $todoId  Todo to update.
-     * @param  ?string  $name  New title (max 255 characters).
-     * @param  ?string  $description  New description.
-     * @param  ?string  $dueDate  New due date as YYYY-MM-DD.
-     * @param  ?float  $plannedHours  New estimate in hours.
-     * @param  ?float  $remainingHours  Hours still remaining.
-     * @param  ?int  $milestoneId  Milestone to attach it to; must be in the same project.
-     * @param  ?array  $tags  Replaces the whole tag list.
-     * @param  ?string  $assignee  Email address of the new assignee.
-     * @return array<string, mixed> The updated todo, read back after writing.
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
      */
-    public function __invoke(
-        int $todoId,
-        ?string $name = null,
-        ?string $description = null,
-        ?string $dueDate = null,
-        ?float $plannedHours = null,
-        ?float $remainingHours = null,
-        ?int $milestoneId = null,
-        ?array $tags = null,
-        ?string $assignee = null,
-    ): array {
+    protected function run(array $arguments): array
+    {
         $this->gateway->assertCanWrite();
 
+        $todoId = (int) $this->requireArg($arguments, 'todoId');
+
         $input = array_filter([
-            'name' => $name,
-            'description' => $description,
-            'dueDate' => $dueDate,
-            'plannedHours' => $plannedHours,
-            'remainingHours' => $remainingHours,
-            'milestoneId' => $milestoneId,
-            'tags' => $tags,
-            'assignee' => $assignee,
+            'name' => $arguments['name'] ?? null,
+            'description' => $arguments['description'] ?? null,
+            'dueDate' => $arguments['dueDate'] ?? null,
+            'plannedHours' => isset($arguments['plannedHours']) ? (float) $arguments['plannedHours'] : null,
+            'remainingHours' => isset($arguments['remainingHours']) ? (float) $arguments['remainingHours'] : null,
+            'milestoneId' => isset($arguments['milestoneId']) ? (int) $arguments['milestoneId'] : null,
+            'tags' => $arguments['tags'] ?? null,
+            'assignee' => $arguments['assignee'] ?? null,
         ], fn ($value) => $value !== null);
 
         if ($input === []) {

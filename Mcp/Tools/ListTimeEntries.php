@@ -2,32 +2,55 @@
 
 namespace Leantime\Plugins\LeantimeMcp\Mcp\Tools;
 
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
+use Laravel\Mcp\Server\Tools\ToolInputSchema;
 use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 use RuntimeException;
 
 /**
  * Lists logged time entries.
  */
-class ListTimeEntries
+#[IsReadOnly]
+class ListTimeEntries extends LeantimeTool
 {
     public function __construct(private readonly DatabridgeGateway $gateway) {}
 
-    /**
-     * Lists time logged against a todo or across a project, with hours and work dates.
-     *
-     * @param  ?int  $todoId  Restrict to one todo.
-     * @param  ?int  $projectId  Restrict to one project.
-     * @return list<mixed> Matching time entries.
-     */
-    public function __invoke(?int $todoId = null, ?int $projectId = null): array
+    public function name(): string
     {
+        return 'list_time_entries';
+    }
+
+    public function description(): string
+    {
+        return 'Lists time logged against a todo or across a project, with hours and work dates. '
+            .'Pass either todoId or projectId.';
+    }
+
+    public function schema(ToolInputSchema $schema): ToolInputSchema
+    {
+        return $schema
+            ->integer('todoId')
+            ->description('Restrict to one todo.')
+            ->integer('projectId')
+            ->description('Restrict to one project.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return list<mixed>
+     */
+    protected function run(array $arguments): array
+    {
+        $todoId = $arguments['todoId'] ?? null;
+        $projectId = $arguments['projectId'] ?? null;
+
         if ($todoId === null && $projectId === null) {
             throw new RuntimeException('Pass either todoId or projectId to list time entries.');
         }
 
         $input = array_filter([
-            'ticketId' => $todoId !== null ? (string) $todoId : null,
-            'projectId' => $projectId !== null ? (string) $projectId : null,
+            'ticketId' => $todoId !== null ? (string) (int) $todoId : null,
+            'projectId' => $projectId !== null ? (string) (int) $projectId : null,
         ], fn ($value) => $value !== null);
 
         return $this->gateway->results(

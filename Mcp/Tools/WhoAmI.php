@@ -2,6 +2,7 @@
 
 namespace Leantime\Plugins\LeantimeMcp\Mcp\Tools;
 
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use Leantime\Plugins\LeantimeMcp\Mcp\ApiUserContext;
 
 /**
@@ -10,17 +11,26 @@ use Leantime\Plugins\LeantimeMcp\Mcp\ApiUserContext;
  * Lets an agent discover what it is allowed to do before attempting it, and proves the auth
  * bridge resolves the Databridge ApiUser inside a tool call.
  */
-class WhoAmI
+#[IsReadOnly]
+class WhoAmI extends LeantimeTool
 {
     public function __construct(private readonly ApiUserContext $context) {}
 
+    public function name(): string
+    {
+        return 'whoami';
+    }
+
+    public function description(): string
+    {
+        return 'Shows which operations and projects the current API key may access.';
+    }
+
     /**
-     * Shows which operations and projects the current API key may access.
-     *
-     * @return array{name: string, operations: list<string>, projects: string} The key's name,
-     *                                                                         granted operations, and accessible project IDs ('all' when unrestricted).
+     * @param  array<string, mixed>  $arguments
+     * @return array{name: string, operations: list<string>, projects: string}
      */
-    public function __invoke(): array
+    protected function run(array $arguments): array
     {
         $user = $this->context->user();
 
