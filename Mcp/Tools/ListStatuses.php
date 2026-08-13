@@ -2,25 +2,46 @@
 
 namespace Leantime\Plugins\LeantimeMcp\Mcp\Tools;
 
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
+use Laravel\Mcp\Server\Tools\ToolInputSchema;
 use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 
 /**
  * Lists a project's status labels.
  */
-class ListStatuses
+#[IsReadOnly]
+class ListStatuses extends LeantimeTool
 {
     public function __construct(private readonly DatabridgeGateway $gateway) {}
 
-    /**
-     * Lists the statuses configured for a project, each with its type (NEW, INPROGRESS or
-     * DONE). Status names are per-project and may be renamed or translated, so read them
-     * here before describing a todo's state to a person.
-     *
-     * @param  int  $projectId  Project whose statuses to list.
-     * @return list<mixed> Statuses with their label and type.
-     */
-    public function __invoke(int $projectId): array
+    public function name(): string
     {
+        return 'list_statuses';
+    }
+
+    public function description(): string
+    {
+        return 'Lists the statuses configured for a project, each with its type (NEW, INPROGRESS '
+            .'or DONE). Status names are per-project and may be renamed or translated, so read '
+            .'them here before describing a todo\'s state to a person.';
+    }
+
+    public function schema(ToolInputSchema $schema): ToolInputSchema
+    {
+        return $schema
+            ->integer('projectId')
+            ->description('Project whose statuses to list.')
+            ->required();
+    }
+
+    /**
+     * @param  array<string, mixed>  $arguments
+     * @return list<mixed>
+     */
+    protected function run(array $arguments): array
+    {
+        $projectId = (int) $this->requireArg($arguments, 'projectId');
+
         return $this->gateway->results(
             fn ($controller, $apiUser) => $controller->projectStatuses($projectId, $apiUser)
         );

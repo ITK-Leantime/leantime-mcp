@@ -2,24 +2,38 @@
 
 namespace Leantime\Plugins\LeantimeMcp\Mcp\Tools;
 
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
+use Leantime\Plugins\LeantimeMcp\Mcp\LeantimeMcpServer;
+
 /**
- * Connectivity check for the Leantime MCP server.
+ * Connectivity check for this MCP server.
  *
  * Deliberately touches no Leantime data and no other plugin, so a failure here points at
  * the MCP transport itself rather than at data access or the auth bridge.
  */
-class Ping
+#[IsReadOnly]
+class Ping extends LeantimeTool
 {
+    public function name(): string
+    {
+        return 'ping';
+    }
+
+    public function description(): string
+    {
+        return 'Confirms this Leantime MCP server is reachable and responding.';
+    }
+
     /**
-     * Confirms the Leantime MCP server is reachable and responding.
-     *
-     * @return array{status: string, server: string} Liveness status and server name.
+     * @param  array<string, mixed>  $arguments
+     * @return array{status: string, server: string}
      */
-    public function __invoke(): array
+    protected function run(array $arguments): array
     {
         return [
             'status' => 'ok',
-            'server' => config('mcp.server.name', 'Leantime MCP'),
+            // Read off the server rather than repeated here, so the two cannot disagree.
+            'server' => (new LeantimeMcpServer)->serverName,
         ];
     }
 }

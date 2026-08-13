@@ -2,27 +2,54 @@
 
 namespace Leantime\Plugins\LeantimeMcp\Mcp\Tools;
 
+use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
+use Laravel\Mcp\Server\Tools\ToolInputSchema;
 use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 
 /**
  * Adds a comment to a todo.
  */
-class AddComment
+#[IsDestructive(false)]
+class AddComment extends LeantimeTool
 {
     public function __construct(private readonly DatabridgeGateway $gateway) {}
 
+    public function name(): string
+    {
+        return 'add_comment';
+    }
+
+    public function description(): string
+    {
+        return 'Comments on a todo as a given person. Note that team members are not notified by '
+            .'email about comments added through this server.';
+    }
+
+    public function schema(ToolInputSchema $schema): ToolInputSchema
+    {
+        return $schema
+            ->integer('todoId')
+            ->description('Todo to comment on.')
+            ->required()
+            ->string('text')
+            ->description('The comment.')
+            ->required()
+            ->string('username')
+            ->description('Email address of the comment\'s author.')
+            ->required();
+    }
+
     /**
-     * Comments on a todo as a given person. Note that team members are not notified by
-     * email about comments added through this server.
-     *
-     * @param  int  $todoId  Todo to comment on.
-     * @param  string  $text  The comment.
-     * @param  string  $username  Email address of the comment's author.
-     * @return array<string, mixed> The created comment.
+     * @param  array<string, mixed>  $arguments
+     * @return array<string, mixed>
      */
-    public function __invoke(int $todoId, string $text, string $username): array
+    protected function run(array $arguments): array
     {
         $this->gateway->assertCanWrite();
+
+        $todoId = (int) $this->requireArg($arguments, 'todoId');
+        $text = $this->requireArg($arguments, 'text');
+        $username = $this->requireArg($arguments, 'username');
 
         return $this->gateway->single(
             fn ($controller, $apiUser) => $controller->createTicketComment(
