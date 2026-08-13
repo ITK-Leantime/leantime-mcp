@@ -49,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   write would otherwise reach the client as a transport failure with no explanation.
 - Missing required arguments are reported by name rather than raising an undefined-key error;
   the advertised schema marks arguments required but the library does not enforce it on calls.
+- Clients requesting a newer MCP protocol revision than `laravel/mcp` knows are now negotiated
+  down to the newest supported one instead of being refused. `mcp-remote` asks for `2025-11-25`,
+  so **Claude Desktop could not connect at all** — it failed with `MCP error -32602: Unsupported
+  protocol version`. Malformed or genuinely older revisions are still rejected.
 - `tools/call` no longer fails with a protocol error when a client omits `arguments` entirely,
   which is legitimate for the tools that take no input (`ping`, `whoami`, `list_projects`).
 - `list_todos` clamps `limit` to 1-200. A negative value made the query builder drop its `LIMIT`

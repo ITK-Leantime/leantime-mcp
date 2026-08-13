@@ -95,6 +95,70 @@ class LeantimeMcpServer extends Server
     }
 
     /**
+     * Negotiate an unknown-newer protocol version down instead of refusing the connection.
+     *
+     * laravel/mcp v0.1.1 rejects any protocolVersion outside $supportedProtocolVersion with
+     * -32602 'Unsupported protocol version'. The MCP spec says a server should instead answer
+     * with a revision it does support and let the client decide. Real clients already ask for
+     * newer ones: mcp-remote — and so Claude Desktop — requests 2025-11-25 and dies with a fatal
+     * error, making this server unreachable from Desktop.
+     *
+     * Rewritten in the raw message because initialize is dispatched via a private method that
+     * hardcodes `new Initialize`, so it cannot be replaced through addMethod(). Only a request
+     * NEWER than everything we support is stepped down; older or unrecognised revisions still hit
+     * the vendor's error, which is the right answer for a genuinely incompatible client.
+     *
+     * Rewriting the request (rather than whitelisting the newer string) matters because
+     * Initialize echoes the requested version straight back into its response — whitelisting
+     * would have this server claim to speak a revision it does not implement.
+     *
+     * Remove once the vendor negotiates versions itself (tracked upstream as plugins#60).
+     */
+    public function handle(string $rawMessage)
+    {
+        return parent::handle($this->negotiateProtocolVersion($rawMessage));
+    }
+
+    /**
+     * Clamp an initialize request's protocolVersion to our newest supported revision.
+     */
+    private function negotiateProtocolVersion(string $rawMessage): string
+    {
+        $decoded = json_decode($rawMessage, true);
+
+        if (! is_array($decoded) || ($decoded['method'] ?? null) !== 'initialize') {
+            return $rawMessage;
+        }
+
+        $requested = $decoded['params']['protocolVersion'] ?? null;
+
+        if (! is_string($requested) || in_array($requested, $this->supportedProtocolVersion, true)) {
+            return $rawMessage;
+        }
+
+        /*
+         * Only step down a well-formed, date-stamped revision. Without the shape check any
+         * non-date string ('bogus') would sort above our newest and be quietly accepted, when the
+         * vendor's 'Unsupported protocol version' is the correct answer for it.
+         */
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $requested) !== 1) {
+            return $rawMessage;
+        }
+
+        // Revisions are date-stamped (YYYY-MM-DD), so a string compare orders them correctly.
+        $newest = max($this->supportedProtocolVersion);
+
+        if ($requested <= $newest) {
+            return $rawMessage;
+        }
+
+        $decoded['params']['protocolVersion'] = $newest;
+
+        // Fall back to the original message if re-encoding somehow fails, rather than dropping it.
+        return json_encode($decoded) ?: $rawMessage;
+    }
+
+    /**
      * Shown to clients on initialize, so keep it describing what these tools reach.
      */
     public string $instructions = 'Read and update Leantime projects, todos, comments and time entries. '
