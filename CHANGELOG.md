@@ -33,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Authenticates `/mcp` with Databridge API keys, reusing its per-key operation and project
   grants so an agent only reaches what its key allows.
 - `ping` and `whoami` tools for connectivity checks and grant discovery.
+- `list_users` tool listing the people on reachable projects with their name, job title and
+  projects, so an agent can turn "the designer" or a first name into the `username` that
+  `list_todos`, `create_todo` and `log_time` require. Previously those tools needed a username
+  with no way to discover one. Scoped to the key's grant, so it cannot enumerate the organisation.
 - Project-management tools: read projects, progress, statuses, milestones, todos, comments,
   attachment metadata and time entries; create and update todos, set status, log time, and comment.
 - Status is exchanged as `NEW`/`INPROGRESS`/`DONE` rather than a per-project id, so the same call

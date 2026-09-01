@@ -14,6 +14,7 @@ use Leantime\Plugins\LeantimeMcp\Mcp\Tools\ListProjects;
 use Leantime\Plugins\LeantimeMcp\Mcp\Tools\ListStatuses;
 use Leantime\Plugins\LeantimeMcp\Mcp\Tools\ListTimeEntries;
 use Leantime\Plugins\LeantimeMcp\Mcp\Tools\ListTodos;
+use Leantime\Plugins\LeantimeMcp\Mcp\Tools\ListUsers;
 use Leantime\Plugins\LeantimeMcp\Mcp\Tools\LogTime;
 use Leantime\Plugins\LeantimeMcp\Mcp\Tools\Ping;
 use Leantime\Plugins\LeantimeMcp\Mcp\Tools\SetTodoStatus;
@@ -75,7 +76,7 @@ class LeantimeMcpServer extends Server
     /**
      * Return every tool on the first page of tools/list.
      *
-     * The vendor default is 15, which would split our 16 tools across two pages. Following the
+     * The vendor default is 15, which would split our 17 tools across two pages. Following the
      * cursor is optional for clients, so on one that ignores it the last tool would simply not
      * exist. Keep this comfortably above the tool count.
      */
@@ -177,8 +178,9 @@ class LeantimeMcpServer extends Server
         Ping::class,
         WhoAmI::class,
 
-        // Reading projects.
+        // Reading projects and the people on them.
         ListProjects::class,
+        ListUsers::class,
         GetProjectProgress::class,
         ListStatuses::class,
         ListMilestones::class,
