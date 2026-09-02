@@ -140,6 +140,7 @@ scoped to the calling key's granted projects, and there is no delete tool and no
 | `ping` | read | Connectivity check; touches no data |
 | `whoami` | read | Reports the calling key's operations and projects |
 | `list_projects` | read | Projects this key can access |
+| `list_users` | read | People on those projects, with the username other tools take |
 | `get_project_progress` | read | Percent complete and completion dates |
 | `list_statuses` | read | A project's status labels and their types |
 | `list_milestones` | read | Milestones with status and due date |
@@ -153,6 +154,15 @@ scoped to the calling key's granted projects, and there is no delete tool and no
 | `set_todo_status` | write | Move a todo to NEW, INPROGRESS or DONE |
 | `log_time` | write | Log hours against a todo |
 | `add_comment` | write | Comment on a todo |
+
+Tools that act on a person — `list_todos`, `create_todo`, `log_time` — identify them by
+`username` (their email). Start with `list_users` to turn a name into that username; it also
+reports each person's job title and projects, so an agent asked about "the designer" or
+"whoever is on Deltag" can find them without being told an address.
+
+`list_users` shows only people assigned to projects the key can access, and each person's
+`projects` is filtered to that same grant — a narrowly scoped key cannot use it to enumerate
+the whole organisation.
 
 Status is exchanged as `NEW`/`INPROGRESS`/`DONE` rather than a number, because status ids are
 configured per project and can be renamed or translated. Use `list_statuses` to show a person
