@@ -12,19 +12,39 @@ use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 #[IsReadOnly]
 class GetProjectProgress extends LeantimeTool
 {
-    public function __construct(private readonly DatabridgeGateway $gateway) {}
+    /**
+     * @param  DatabridgeGateway $gateway In-process bridge to Databridge's API controller.
+     */
+    public function __construct(private readonly DatabridgeGateway $gateway)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'get_project_progress';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Gets how far along a project is: percent complete, plus estimated and planned '
-            .'completion dates. Use this to report status on a project as a whole.';
+            . 'completion dates. Use this to report status on a project as a whole.';
     }
 
+    /**
+     * Declares the tool's input arguments.
+     *
+     * @return ToolInputSchema
+     */
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         return $schema
@@ -34,7 +54,7 @@ class GetProjectProgress extends LeantimeTool
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return array<string, mixed>
      */
     protected function run(array $arguments): array

@@ -12,19 +12,39 @@ use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 #[IsDestructive(false)]
 class CreateTodo extends LeantimeTool
 {
-    public function __construct(private readonly DatabridgeGateway $gateway) {}
+    /**
+     * @param  DatabridgeGateway $gateway In-process bridge to Databridge's API controller.
+     */
+    public function __construct(private readonly DatabridgeGateway $gateway)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'create_todo';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Creates a todo in a project and assigns it to someone. Returns the created todo, '
-            .'including the id needed to update it later.';
+            . 'including the id needed to update it later.';
     }
 
+    /**
+     * Declares the tool's input arguments.
+     *
+     * @return ToolInputSchema
+     */
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         return $schema
@@ -54,7 +74,7 @@ class CreateTodo extends LeantimeTool
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return array<string, mixed>
      */
     protected function run(array $arguments): array

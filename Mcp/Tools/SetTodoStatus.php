@@ -12,19 +12,39 @@ use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 #[IsDestructive(false)]
 class SetTodoStatus extends LeantimeTool
 {
-    public function __construct(private readonly DatabridgeGateway $gateway) {}
+    /**
+     * @param  DatabridgeGateway $gateway In-process bridge to Databridge's API controller.
+     */
+    public function __construct(private readonly DatabridgeGateway $gateway)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'set_todo_status';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Sets a todo\'s progress. Takes a type rather than a status name because each '
-            .'project names its statuses differently — this works in any project.';
+            . 'project names its statuses differently — this works in any project.';
     }
 
+    /**
+     * Declares the tool's input arguments.
+     *
+     * @return ToolInputSchema
+     */
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         return $schema
@@ -37,7 +57,7 @@ class SetTodoStatus extends LeantimeTool
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return array<string, mixed> The updated todo, read back after writing so the reported
      *                              status reflects what was actually stored.
      */

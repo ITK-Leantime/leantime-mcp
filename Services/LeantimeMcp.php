@@ -15,6 +15,8 @@ class LeantimeMcp
 {
     /**
      * Called on plugin install. Nothing to set up.
+     *
+     * @return bool
      */
     public function install(): bool
     {
@@ -23,6 +25,8 @@ class LeantimeMcp
 
     /**
      * Called on plugin uninstall. Nothing to tear down.
+     *
+     * @return bool
      */
     public function uninstall(): bool
     {

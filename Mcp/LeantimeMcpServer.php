@@ -55,6 +55,8 @@ class LeantimeMcpServer extends Server
      *
      * Distinguishes this from Leantime's own commercial MCP server on /mcp, which reports
      * itself as "Leantime" — a client talking to both should be able to tell them apart.
+     *
+     * @var string
      */
     public string $serverName = 'Leantime MCP (ITK)';
 
@@ -66,6 +68,8 @@ class LeantimeMcpServer extends Server
      * The vendor default announces resources and prompts too; we register neither, so clients
      * would offer empty resource and prompt pickers. The old php-mcp config switched them off
      * explicitly and this keeps that behaviour.
+     *
+     * @var array<string, array<string, bool>>
      */
     public array $capabilities = [
         'tools' => [
@@ -79,9 +83,14 @@ class LeantimeMcpServer extends Server
      * The vendor default is 15, which would split our 17 tools across two pages. Following the
      * cursor is optional for clients, so on one that ignores it the last tool would simply not
      * exist. Keep this comfortably above the tool count.
+     *
+     * @var int
      */
     public int $defaultPaginationLength = 50;
 
+    /**
+     * Wires up the vendor server, then swaps in this plugin's tools/call handler.
+     */
     public function __construct()
     {
         parent::__construct();
@@ -114,6 +123,8 @@ class LeantimeMcpServer extends Server
      * would have this server claim to speak a revision it does not implement.
      *
      * Remove once the vendor negotiates versions itself (tracked upstream as plugins#60).
+     *
+     * @return mixed Whatever the vendor's handle() returns — it declares no type either.
      */
     public function handle(string $rawMessage)
     {
@@ -122,6 +133,8 @@ class LeantimeMcpServer extends Server
 
     /**
      * Clamp an initialize request's protocolVersion to our newest supported revision.
+     *
+     * @return string The raw message, its protocolVersion rewritten when newer than supported.
      */
     private function negotiateProtocolVersion(string $rawMessage): string
     {
@@ -161,9 +174,11 @@ class LeantimeMcpServer extends Server
 
     /**
      * Shown to clients on initialize, so keep it describing what these tools reach.
+     *
+     * @var string
      */
     public string $instructions = 'Read and update Leantime projects, todos, comments and time entries. '
-        .'Access is limited to the projects the calling API key is granted.';
+        . 'Access is limited to the projects the calling API key is granted.';
 
     /**
      * The tools exposed by this server.

@@ -22,4 +22,4 @@ use Leantime\Plugins\LeantimeMcp\Mcp\LeantimeMcpServer;
  * to reach any tool at all; write tools re-check for the write grant on the ApiUser.
  */
 Mcp::web(LeantimeMcpServer::ROUTE, LeantimeMcpServer::class)
-    ->middleware([\Leantime\Plugins\Databridge\Middleware\ApiKeyAuth::class.':read']);
+    ->middleware([\Leantime\Plugins\Databridge\Middleware\ApiKeyAuth::class . ':read']);

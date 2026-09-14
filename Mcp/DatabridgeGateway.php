@@ -23,12 +23,19 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 class DatabridgeGateway
 {
-    public function __construct(private readonly ApiUserContext $context) {}
+    /**
+     * @param  ApiUserContext $context The calling key's grants, as authenticated by ApiKeyAuth.
+     */
+    public function __construct(private readonly ApiUserContext $context)
+    {
+    }
 
     /**
      * Whether the calling key holds the write grant.
      *
      * Read tools need no check — the /mcp route group already requires ':read'.
+     *
+     * @return void
      */
     public function assertCanWrite(): void
     {
@@ -42,7 +49,7 @@ class DatabridgeGateway
      * 2xx is surfaced as an exception carrying the controller's own message, so the agent
      * sees "Project not granted for this API key." rather than a bare failure.
      *
-     * @param  callable(Api, \Leantime\Plugins\Databridge\Model\ApiUser): JsonResponse  $call
+     * @param  callable(Api, \Leantime\Plugins\Databridge\Model\ApiUser): JsonResponse $call
      * @return array<string, mixed> The decoded response body.
      */
     public function call(callable $call): array
@@ -67,7 +74,7 @@ class DatabridgeGateway
         $status = $response->getStatusCode();
 
         if ($status < 200 || $status >= 300) {
-            throw new RuntimeException($payload['error'] ?? "Databridge request failed with status {$status}.");
+            throw new RuntimeException($payload['error'] ?? 'Databridge request failed with status ' . $status . '.');
         }
 
         return $payload;
@@ -80,7 +87,7 @@ class DatabridgeGateway
      * {parameters, resultsCount, results}. Tools return the rows alone: the echoed
      * parameters are what the agent just sent, so repeating them back only spends tokens.
      *
-     * @param  callable(Api, \Leantime\Plugins\Databridge\Model\ApiUser): JsonResponse  $call
+     * @param  callable(Api, \Leantime\Plugins\Databridge\Model\ApiUser): JsonResponse $call
      * @return list<mixed>
      */
     public function results(callable $call): array
@@ -91,7 +98,7 @@ class DatabridgeGateway
     /**
      * Invoke a controller method expected to return exactly one row, and return that row.
      *
-     * @param  callable(Api, \Leantime\Plugins\Databridge\Model\ApiUser): JsonResponse  $call
+     * @param  callable(Api, \Leantime\Plugins\Databridge\Model\ApiUser): JsonResponse $call
      * @return array<string, mixed>
      */
     public function single(callable $call): array

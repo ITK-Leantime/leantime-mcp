@@ -12,19 +12,39 @@ use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 #[IsDestructive(false)]
 class AddComment extends LeantimeTool
 {
-    public function __construct(private readonly DatabridgeGateway $gateway) {}
+    /**
+     * @param  DatabridgeGateway $gateway In-process bridge to Databridge's API controller.
+     */
+    public function __construct(private readonly DatabridgeGateway $gateway)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'add_comment';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Comments on a todo as a given person. Note that team members are not notified by '
-            .'email about comments added through this server.';
+            . 'email about comments added through this server.';
     }
 
+    /**
+     * Declares the tool's input arguments.
+     *
+     * @return ToolInputSchema
+     */
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         return $schema
@@ -40,7 +60,7 @@ class AddComment extends LeantimeTool
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return array<string, mixed>
      */
     protected function run(array $arguments): array

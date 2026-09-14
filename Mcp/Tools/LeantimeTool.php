@@ -22,13 +22,14 @@ abstract class LeantimeTool extends Tool
     /**
      * Run the tool, returning the payload to hand back as JSON.
      *
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return array<mixed>
      */
     abstract protected function run(array $arguments): array;
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
+     * @return ToolResult The run() payload as JSON, or a thrown error as readable text.
      */
     public function handle(array $arguments): ToolResult
     {
@@ -51,12 +52,13 @@ abstract class LeantimeTool extends Tool
      * enforce that server-side on tools/call — a client may still omit one, so read through
      * here rather than indexing $arguments directly.
      *
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
+     * @return mixed The argument's value.
      */
     protected function requireArg(array $arguments, string $name): mixed
     {
         if (! array_key_exists($name, $arguments) || $arguments[$name] === null || $arguments[$name] === '') {
-            throw new \RuntimeException("Missing required argument: {$name}.");
+            throw new \RuntimeException('Missing required argument: ' . $name . '.');
         }
 
         return $arguments[$name];
