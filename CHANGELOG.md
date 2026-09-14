@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added actions.
+- Added release logic.
 - Plugin scaffold.
 - Serves a Model Context Protocol server at `/mcp` over Streamable HTTP, so MCP clients
   connect by URL with no local process or per-machine API key.

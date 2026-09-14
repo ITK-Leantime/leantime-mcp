@@ -1,0 +1,21 @@
+parameters:
+    level: 6
+    paths:
+        - .
+
+    # analyse-scoped, NOT a plain list: a bare excludePaths list means
+    # "analyseAndScan", which would block scanning under vendor and
+    # silently override scanDirectories below.
+    excludePaths:
+        analyse:
+            - vendor
+            - node_modules
+
+    # Databridge ships no composer autoload map, so phpstan must be told
+    # to scan its checkout for symbols directly.
+    scanDirectories:
+        - vendor/leantime/databridge
+
+  # Local Variables:
+  # mode: yaml
+  # End:

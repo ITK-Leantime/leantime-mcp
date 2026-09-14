@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -o errexit -o errtrace -o noclobber -o nounset -o pipefail
+
+# The folder name Leantime expects the plugin under (namespace is derived from it).
+export plugin_name=LeantimeMcp
+export plugin_repo_url=https://github.com/ITK-Leantime/leantime-mcp/
+
+buildRelease() {
+  return
+}
+
+export -f buildRelease

@@ -6,7 +6,54 @@
     "version": "0.2.0",
     "authors": [],
     "homepage": "https://github.com/ITK-Leantime/leantime-mcp",
-    "require-dev": {},
-    "config": {},
-    "scripts": {}
+    "require-dev": {
+        "ergebnis/composer-normalize": "^2.42",
+        "leantime/databridge": "^1.0",
+        "leantime/leantime": "^3.9.7",
+        "phpcsstandards/phpcsextra": "^1.2",
+        "phpstan/phpstan": "^1.10",
+        "squizlabs/php_codesniffer": "^3.9",
+        "zebra-north/phpcs-short-types": "^1.0"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/ITK-Leantime/leantime_databridge"
+        }
+    ],
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "ergebnis/composer-normalize": true,
+            "metasyntactical/composer-plugin-license-check": true,
+            "php-http/discovery": true
+        },
+        "policy": {
+            "advisories": {
+                "ignore": [
+                    "laravel/framework"
+                ]
+            }
+        }
+    },
+    "scripts": {
+        "code-analysis": [
+            "@code-analysis/phpstan"
+        ],
+        "code-analysis/phpstan": [
+            "phpstan analyse"
+        ],
+        "coding-standards-apply": [
+            "@coding-standards-apply/phpcbf"
+        ],
+        "coding-standards-apply/phpcbf": [
+            "phpcbf ."
+        ],
+        "coding-standards-check": [
+            "@coding-standards-check/phpcs"
+        ],
+        "coding-standards-check/phpcs": [
+            "phpcs ."
+        ]
+    }
 }
