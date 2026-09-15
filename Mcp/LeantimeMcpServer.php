@@ -60,7 +60,7 @@ class LeantimeMcpServer extends Server
      */
     public string $serverName = 'Leantime MCP (ITK)';
 
-    public string $serverVersion = '0.2.0';
+    public string $serverVersion = '0.3.0';
 
     /**
      * Advertise only what this server actually implements.

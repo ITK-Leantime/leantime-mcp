@@ -3,7 +3,7 @@
     "description": "Serves a Model Context Protocol server from Leantime for AI agents",
     "license": "MIT",
     "type": "leantime-plugin",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "authors": [],
     "homepage": "https://github.com/ITK-Leantime/leantime-mcp",
     "require-dev": {
