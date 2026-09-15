@@ -22,6 +22,8 @@ class ApiUserContext
     /**
      * The authenticated API user for this request.
      *
+     * @return ApiUser
+     *
      * @throws RuntimeException If the request never passed through ApiKeyAuth, which would
      *                          mean the /mcp middleware is misconfigured. Fail loudly rather
      *                          than defaulting to an unscoped user.
@@ -44,6 +46,8 @@ class ApiUserContext
      *
      * The /mcp route group only requires ':read', so every mutating tool must call this.
      *
+     * @return void
+     *
      * @throws RuntimeException If the key lacks the write grant.
      */
     public function assertCanWrite(): void
@@ -56,12 +60,14 @@ class ApiUserContext
     /**
      * Assert the API key may access the given project.
      *
+     * @return void
+     *
      * @throws RuntimeException If the project is outside the key's grants.
      */
     public function assertCanAccessProject(int $projectId): void
     {
         if (! $this->user()->canAccessProject($projectId)) {
-            throw new RuntimeException("This API key does not have access to project {$projectId}.");
+            throw new RuntimeException('This API key does not have access to project ' . $projectId . '.');
         }
     }
 }

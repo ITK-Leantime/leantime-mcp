@@ -12,20 +12,40 @@ use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 #[IsReadOnly]
 class ListAttachments extends LeantimeTool
 {
-    public function __construct(private readonly DatabridgeGateway $gateway) {}
+    /**
+     * @param  DatabridgeGateway $gateway In-process bridge to Databridge's API controller.
+     */
+    public function __construct(private readonly DatabridgeGateway $gateway)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'list_attachments';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Lists the files attached to a todo — filename, type, who uploaded it and when. '
-            .'File contents are not available through this server; open the todo in Leantime to '
-            .'download.';
+            . 'File contents are not available through this server; open the todo in Leantime to '
+            . 'download.';
     }
 
+    /**
+     * Declares the tool's input arguments.
+     *
+     * @return ToolInputSchema
+     */
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         return $schema
@@ -35,7 +55,7 @@ class ListAttachments extends LeantimeTool
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return list<mixed>
      */
     protected function run(array $arguments): array

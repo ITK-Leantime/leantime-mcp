@@ -13,20 +13,40 @@ use RuntimeException;
 #[IsDestructive(false)]
 class UpdateTodo extends LeantimeTool
 {
-    public function __construct(private readonly DatabridgeGateway $gateway) {}
+    /**
+     * @param  DatabridgeGateway $gateway In-process bridge to Databridge's API controller.
+     */
+    public function __construct(private readonly DatabridgeGateway $gateway)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'update_todo';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Updates a todo. Only the fields you pass are changed — omitted fields keep their '
-            .'current values, so there is no need to read the todo first. To change progress, use '
-            .'set_todo_status instead.';
+            . 'current values, so there is no need to read the todo first. To change progress, use '
+            . 'set_todo_status instead.';
     }
 
+    /**
+     * Declares the tool's input arguments.
+     *
+     * @return ToolInputSchema
+     */
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         return $schema
@@ -55,7 +75,7 @@ class UpdateTodo extends LeantimeTool
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return array<string, mixed>
      */
     protected function run(array $arguments): array

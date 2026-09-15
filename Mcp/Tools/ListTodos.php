@@ -22,19 +22,39 @@ class ListTodos extends LeantimeTool
      */
     private const MAX_LIMIT = 200;
 
-    public function __construct(private readonly DatabridgeGateway $gateway) {}
+    /**
+     * @param  DatabridgeGateway $gateway In-process bridge to Databridge's API controller.
+     */
+    public function __construct(private readonly DatabridgeGateway $gateway)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'list_todos';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Lists todos assigned to a person, newest ids last. Results only ever include '
-            .'projects this API key may access.';
+            . 'projects this API key may access.';
     }
 
+    /**
+     * Declares the tool's input arguments.
+     *
+     * @return ToolInputSchema
+     */
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         return $schema
@@ -48,13 +68,13 @@ class ListTodos extends LeantimeTool
             ->string('dueTo')
             ->description('Only todos due on or before this date (YYYY-MM-DD).')
             ->integer('limit')
-            ->description('Maximum todos to return, 1-'.self::MAX_LIMIT.' (default 50).')
+            ->description('Maximum todos to return, 1-' . self::MAX_LIMIT . ' (default 50).')
             ->integer('sinceId')
             ->description('Return todos with an id at or above this, for paging.');
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return list<mixed>
      */
     protected function run(array $arguments): array

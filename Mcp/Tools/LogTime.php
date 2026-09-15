@@ -17,22 +17,42 @@ use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 #[IsIdempotent]
 class LogTime extends LeantimeTool
 {
-    public function __construct(private readonly DatabridgeGateway $gateway) {}
+    /**
+     * @param  DatabridgeGateway $gateway In-process bridge to Databridge's API controller.
+     */
+    public function __construct(private readonly DatabridgeGateway $gateway)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'log_time';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Logs hours worked on a todo for a given person and date. Safe to retry: only one '
-            .'entry can exist per person, todo, date and kind, so repeating a call whose result '
-            .'you never saw cannot book the same work twice — it reports that the entry already '
-            .'exists instead. To log more time for the same day, read the entry with '
-            .'list_time_entries and add to its hours rather than logging a second one.';
+            . 'entry can exist per person, todo, date and kind, so repeating a call whose result '
+            . 'you never saw cannot book the same work twice — it reports that the entry already '
+            . 'exists instead. To log more time for the same day, read the entry with '
+            . 'list_time_entries and add to its hours rather than logging a second one.';
     }
 
+    /**
+     * Declares the tool's input arguments.
+     *
+     * @return ToolInputSchema
+     */
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         return $schema
@@ -55,7 +75,7 @@ class LogTime extends LeantimeTool
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return array<string, mixed>
      */
     protected function run(array $arguments): array

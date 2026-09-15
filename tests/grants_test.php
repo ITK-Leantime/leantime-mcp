@@ -15,16 +15,19 @@
  * uses plain conditionals and a non-zero exit instead.
  */
 
-require_once __DIR__.'/../../Databridge/Model/Operation.php';
-require_once __DIR__.'/../../Databridge/Model/ApiUser.php';
+require_once __DIR__ . '/../../Databridge/Model/Operation.php';
+require_once __DIR__ . '/../../Databridge/Model/ApiUser.php';
 
 use Leantime\Plugins\Databridge\Model\ApiUser;
 use Leantime\Plugins\Databridge\Model\Operation;
 
+/** @var list<string> $failures Widened for phpstan: check() appends via `global`, which it cannot track. */
 $failures = [];
 
 /**
  * Record a failure unless $actual matches $expected.
+ *
+ * @return void
  */
 function check(string $description, bool $expected, bool $actual): void
 {
@@ -66,7 +69,7 @@ check('cast string id is still refused', false, $readOnly->canAccessProject((int
 if ($failures !== []) {
     fwrite(STDERR, "grants_test FAILED:\n");
     foreach ($failures as $failure) {
-        fwrite(STDERR, "  - {$failure}\n");
+        fwrite(STDERR, '  - ' . $failure . "\n");
     }
     exit(1);
 }

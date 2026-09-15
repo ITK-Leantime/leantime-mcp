@@ -14,18 +14,28 @@ use Leantime\Plugins\LeantimeMcp\Mcp\LeantimeMcpServer;
 #[IsReadOnly]
 class Ping extends LeantimeTool
 {
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'ping';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Confirms this Leantime MCP server is reachable and responding.';
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return array{status: string, server: string}
      */
     protected function run(array $arguments): array
@@ -33,7 +43,7 @@ class Ping extends LeantimeTool
         return [
             'status' => 'ok',
             // Read off the server rather than repeated here, so the two cannot disagree.
-            'server' => (new LeantimeMcpServer)->serverName,
+            'server' => (new LeantimeMcpServer())->serverName,
         ];
     }
 }

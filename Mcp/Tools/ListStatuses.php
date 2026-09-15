@@ -12,20 +12,40 @@ use Leantime\Plugins\LeantimeMcp\Mcp\DatabridgeGateway;
 #[IsReadOnly]
 class ListStatuses extends LeantimeTool
 {
-    public function __construct(private readonly DatabridgeGateway $gateway) {}
+    /**
+     * @param  DatabridgeGateway $gateway In-process bridge to Databridge's API controller.
+     */
+    public function __construct(private readonly DatabridgeGateway $gateway)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'list_statuses';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Lists the statuses configured for a project, each with its type (NEW, INPROGRESS '
-            .'or DONE). Status names are per-project and may be renamed or translated, so read '
-            .'them here before describing a todo\'s state to a person.';
+            . 'or DONE). Status names are per-project and may be renamed or translated, so read '
+            . 'them here before describing a todo\'s state to a person.';
     }
 
+    /**
+     * Declares the tool's input arguments.
+     *
+     * @return ToolInputSchema
+     */
     public function schema(ToolInputSchema $schema): ToolInputSchema
     {
         return $schema
@@ -35,7 +55,7 @@ class ListStatuses extends LeantimeTool
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return list<mixed>
      */
     protected function run(array $arguments): array

@@ -14,20 +14,35 @@ use Leantime\Plugins\LeantimeMcp\Mcp\ApiUserContext;
 #[IsReadOnly]
 class WhoAmI extends LeantimeTool
 {
-    public function __construct(private readonly ApiUserContext $context) {}
+    /**
+     * @param  ApiUserContext $context The calling key's grants, as authenticated by ApiKeyAuth.
+     */
+    public function __construct(private readonly ApiUserContext $context)
+    {
+    }
 
+    /**
+     * The tool name advertised in tools/list.
+     *
+     * @return string
+     */
     public function name(): string
     {
         return 'whoami';
     }
 
+    /**
+     * The tool description shown to agents in tools/list.
+     *
+     * @return string
+     */
     public function description(): string
     {
         return 'Shows which operations and projects the current API key may access.';
     }
 
     /**
-     * @param  array<string, mixed>  $arguments
+     * @param  array<string, mixed> $arguments
      * @return array{name: string, operations: list<string>, projects: string}
      */
     protected function run(array $arguments): array

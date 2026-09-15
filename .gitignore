@@ -1,5 +1,11 @@
 vendor/
 node_modules/
+composer.lock
+
+# Release packaging output (bin/create-release).
+*.tar.gz
+checksum.txt
+release/
 
 # Never commit API keys or auth config. The Databridge auth file belongs in
 # <leantime>/config/databridge_auth.yaml, never in a plugin folder.
